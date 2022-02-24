@@ -6,11 +6,16 @@ import { ConfigService, ConfigModule } from '@nestjs/config';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsEntity } from './posts/posts.entity';
+import { FetchWeatherEntity } from './fetch-weather/fetch-weather.entity';
+import { FetchWeatherModule } from './fetch-weather/fetch-weather.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksService } from './schedule/tasks.service';
 
 import envConfig from '../config/env';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true, // 设置为全局
       envFilePath: [envConfig.path],
@@ -20,7 +25,7 @@ import envConfig from '../config/env';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql', // 数据库类型
-        entities: [PostsEntity], // 数据表实体
+        entities: [PostsEntity, FetchWeatherEntity], // 数据表实体
         host: configService.get('DB_HOST'), // 主机，默认为localhost
         port: configService.get<number>('DB_PORT'), // 端口号
         username: configService.get('DB_USER'), // 用户名
@@ -31,8 +36,9 @@ import envConfig from '../config/env';
       }),
     }),
     PostsModule,
+    FetchWeatherModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, TasksService],
 })
 export class AppModule {}
